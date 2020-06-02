@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:clima/services/location.dart';
+import 'package:clima/services/networking.dart';
 
 class LoadingScreen extends StatefulWidget {
   @override
@@ -8,19 +9,35 @@ class LoadingScreen extends StatefulWidget {
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
-  void getLocation() async {
-    print('getting location');
-
+  void getLocationData() async {
+    const apiKey = String.fromEnvironment('API_KEY');
     Position position = await Location().getCurrentLocation();
 
-    print(position);
+    double lat = position.latitude;
+    double lon = position.longitude;
+
+    String requestURL =
+        'https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$apiKey';
+
+    NetworkHelper networkHelper = NetworkHelper(requestURL);
+
+    var weatherData = await networkHelper.makeRequest();
+
+    // var lon = jsonDecode(data)['coord']['lon'];
+    // var weatherDesc = jsonDecode(data)['weather'][0]['description'];
+    double temp = weatherData['main']['temp'];
+    int condition = weatherData['weather'][0]['id'];
+    String cityName = weatherData['name'];
+
+    print(
+        'the temp in $cityName is $temp and the condition code is $condition');
   }
 
   @override
   void initState() {
     super.initState();
     print('init state callback called');
-    getLocation();
+    getLocationData();
   }
 
   @override
@@ -30,7 +47,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
       body: Center(
         child: RaisedButton(
           onPressed: () {
-            getLocation();
+            // getLocation();
           },
           child: Text('Get Location'),
         ),
